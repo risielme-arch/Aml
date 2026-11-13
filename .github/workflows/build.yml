@@ -1,26 +1,28 @@
-name: Build AML Plugin
+#include <jni.h>
+#include <dlfcn.h>
+#include <android/log.h>
 
-on:
-  push:
-    branches:
-      - main
-      - utama
-  workflow_dispatch:
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "AML12", __VA_ARGS__)
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+extern "C" void OnModLoad() {
+    LOGI("Plugin AML berhasil dimuat!");
 
-      - name: Compile Aml12.cpp
-        run: |
-          NDK_BIN="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          "$NDK_BIN/armv7a-linux-androideabi21-clang++" -shared -fPIC Aml12.cpp -o libAml12.so -llog -lEGL -lGLESv2
+    void* handle = dlopen("libGTASA.so", RTLD_LAZY);
+    if (!handle) {
+        LOGI("Gagal membuka libGTASA.so");
+        return;
+    }
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: libAml12-armv7
-          path: libAml12.so
+    // Mengambil fungsi internal game untuk meminta model mobil
+    void (*CStreaming_RequestModel)(int, int) = 
+        (void (*)(int, int))dlsym(handle, "_ZN10CStreaming12RequestModelEii");
+    void (*CStreaming_LoadAllRequestedModels)(bool) = 
+        (void (*)(bool))dlsym(handle, "_ZN10CStreaming22LoadAllRequestedModelsEb");
+
+    if (CStreaming_RequestModel && CStreaming_LoadAllRequestedModels) {
+        // ID 451 adalah Turismo
+        CStreaming_RequestModel(451, 2);
+        CStreaming_LoadAllRequestedModels(false);
+        LOGI("Mobil Turismo (451) berhasil dipanggil ke memori!");
+    }
+}
