@@ -2,24 +2,25 @@ name: Build AML Plugin
 
 on:
   push:
-    branches: [ main, utama ]
+    branches:
+      - main
+      - utama
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Ambil Kode Repositori
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Kompilasi Aml12.cpp ke ARMv7 32-bit (.so)
+      - name: Compile Aml12.cpp
         run: |
           NDK_BIN="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
           "$NDK_BIN/armv7a-linux-androideabi21-clang++" -shared -fPIC Aml12.cpp -o libAml12.so -llog
 
-      - name: Unggah Hasil File .so
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: libAml12-armv7
           path: libAml12.so
-￼Enter
