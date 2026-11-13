@@ -14,15 +14,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Siapkan Dobby Hook (ARMv7)
-        run: |
-          wget -q https://github.com/jmpews/Dobby/releases/download/2023.4.14/dobby-android-arm.tar.gz
-          tar -xzf dobby-android-arm.tar.gz
-
       - name: Compile Aml12.cpp
         run: |
           NDK_BIN="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          "$NDK_BIN/armv7a-linux-androideabi21-clang++" -shared -fPIC -Iinclude Aml12.cpp lib/libdobby.a -o libAml12.so -llog
+          "$NDK_BIN/armv7a-linux-androideabi21-clang++" -shared -fPIC Aml12.cpp -o libAml12.so -llog -lEGL -lGLESv2
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
